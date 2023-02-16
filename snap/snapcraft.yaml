@@ -1,0 +1,121 @@
+name: gaming-graphics-tests
+summary: Tests for the gaming-graphics snap
+description: |
+  Verifies the gaming-graphics content snap is working in core22
+grade: stable
+confinement: strict
+architectures:
+  - build-on: amd64
+base: core22
+compression: lzo
+version: 1.0.0
+
+parts:
+  test:
+    plugin: dump
+    source: tests
+    override-build: |
+      mkdir -p $CRAFT_PART_INSTALL/tests
+      cp -rp * $CRAFT_PART_INSTALL/tests/
+
+  utils:
+    plugin: nil
+    source: ./src
+    stage-packages:
+      - jq
+    stage:
+      - -share/doc/jq
+    override-build: |
+      mkdir -p $CRAFT_PART_INSTALL/bin
+      cp vulkaninfo $CRAFT_PART_INSTALL/bin/
+      cp vkcube $CRAFT_PART_INSTALL/bin/
+      cp glxinfo $CRAFT_PART_INSTALL/bin/
+      cp glxgears $CRAFT_PART_INSTALL/bin/
+
+plugs:
+  gaming-mesa:
+    interface: content
+    target: $SNAP/graphics
+    default-provider: gaming-graphics-core22
+
+environment:
+  PATH: "$PATH:$SNAP/usr/bin:$SNAP/bin"
+  LIBGL_DRIVERS_PATH: $SNAP/graphics/usr/lib/i386-linux-gnu/dri:$SNAP/graphics/usr/lib/x86_64-linux-gnu/dri:${LIBGL_DRIVERS_PATH:+:$LIBGL_DRIVERS_PATH}
+  VK_ICD_FILENAMES: "/var/lib/snapd/lib/vulkan/icd.d/nvidia_icd.json:$SNAP/graphics/usr/share/vulkan/icd.d/radeon_icd.x86_64.json:$SNAP/graphics/usr/share/vulkan/icd.d/radeon_icd.i686.json:$SNAP/graphics/usr/share/vulkan/icd.d/intel_icd.x86_64.json:$SNAP/graphics/usr/share/vulkan/icd.d/intel_icd.i686.json"
+  __EGL_VENDOR_LIBRARY_DIRS: "/var/lib/snapd/lib/glvnd/egl_vendor.d:$__EGL_VENDOR_LIBRARY_DIRS:$SNAP_DESKTOP_RUNTIME/usr/share/glvnd/egl_vendor.d"
+  # Adds the gaming-graphics-core22 library paths as well as where snapd mounts proprietary Nvidia drivers, and jq's libraries
+  LD_LIBRARY_PATH: $SNAP/usr/lib/x86_64-linux-gnu/$SNAP/graphics/lib:$SNAP/graphics/usr/lib/i386-linux-gnu:$SNAP/graphics/usr/lib/x86_64-linux-gnu:/var/lib/snapd/lib/gl:$SNAP/usr/lib/x86_64-linux-gnu:${LIBGL_DRIVERS_PATH}:$LD_LIBRARY_PATH
+
+hooks:
+  configure:
+    plugs:
+      - opengl
+
+layout:
+  # https://discourse.ubuntu.com/t/the-graphics-core20-snap-interface/23000
+  /usr/share/libdrm:
+    bind: $SNAP/graphics/libdrm
+  /usr/share/drirc.d:
+    bind: $SNAP/graphics/usr/share/drirc.d
+  /usr/share/glvnd/egl_vendor.d:
+    bind: $SNAP/graphics/usr/share/glvnd/egl_vendor.d
+  /usr/lib/x86_64-linux-gnu/alsa-lib:
+    bind: $SNAP/usr/lib/x86_64-linux-gnu/alsa-lib
+  /usr/share/alsa:
+    bind: $SNAP/usr/share/alsa
+  /usr/lib/x86_64-linux-gnu/libvulkan_intel.so:
+    symlink: $SNAP/graphics/usr/lib/x86_64-linux-gnu/libvulkan_intel.so
+  /usr/lib/i386-linux-gnu/libvulkan_intel.so:
+    symlink: $SNAP/graphics/usr/lib/i386-linux-gnu/libvulkan_intel.so
+  /usr/lib/x86_64-linux-gnu/libvulkan_lvp.so:
+    symlink: $SNAP/graphics/usr/lib/x86_64-linux-gnu/libvulkan_lvp.so
+  /usr/lib/i386-linux-gnu/libvulkan_lvp.so:
+    symlink: $SNAP/graphics/usr/lib/i386-linux-gnu/libvulkan_lvp.so
+  /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so:
+    symlink: $SNAP/graphics/usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
+  /usr/lib/i386-linux-gnu/libvulkan_radeon.so:
+    symlink: $SNAP/graphics/usr/lib/i386-linux-gnu/libvulkan_radeon.so
+  /usr/lib/x86_64-linux-gnu/libxcb-dri3.so.0.0.0:
+    symlink: $SNAP/graphics/usr/lib/x86_64-linux-gnu/libxcb-dri3.so.0.0.0
+  /usr/lib/x86_64-linux-gnu/libxcb-dri3.so.0:
+    symlink: $SNAP/graphics/usr/lib/x86_64-linux-gnu/libxcb-dri3.so.0.0.0
+  /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0:
+    symlink: $SNAP/graphics/usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
+  /usr/lib/x86_64-linux-gnu/libxcb.so:
+    symlink: $SNAP/graphics/usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
+  /usr/lib/x86_64-linux-gnu/libxcb.so.1:
+    symlink: $SNAP/graphics/usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
+  /etc/ld.so.cache:
+    bind-file: $SNAP_DATA/etc/ld.so.cache
+
+apps:
+  gaming-graphics-tests:
+    command: tests/run.sh
+    plugs:
+      - opengl
+      - x11
+      - desktop
+  vulkaninfo:
+    command: bin/vulkaninfo
+    plugs:
+      - opengl
+      - x11
+      - desktop
+  vkcube:
+    command: bin/vkcube
+    plugs:
+      - opengl
+      - x11
+      - desktop
+  glxinfo:
+    command: bin/glxinfo
+    plugs:
+      - opengl
+      - x11
+      - desktop
+  glxgears:
+    command: bin/glxgears
+    plugs:
+      - opengl
+      - x11
+      - desktop
