@@ -8,9 +8,19 @@
 # fi
 
 dir=$(dirname $0)
-`$dir/glx` && echo "GLX passed" || echo "GLX failed"
+
+$dir/glx
 glx_failed=$?
-`$dir/vulkan` && echo "Vulkan passed" || echo "Vulkan failed"
+
+if [ glx_failed ]; then
+  echo "GLX passed" || echo "GLX failed"
+fi
+
+$dir/vulkan
 vulkan_failed=$?
+
+if [ vulkan_failed ]; then
+  echo "Vulkan passed" || echo "Vulkan failed"
+fi
 
 exit $glx_failed || $vulkan_failed
