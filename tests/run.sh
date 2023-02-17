@@ -12,15 +12,19 @@ dir=$(dirname $0)
 $dir/glx
 glx_failed=$?
 
-if [ glx_failed ]; then
-  echo "GLX passed" || echo "GLX failed"
+if [[ $glx_failed -eq 0 ]]; then
+  echo "GLX passed"
+else
+  echo "GLX failed"
 fi
 
 $dir/vulkan
 vulkan_failed=$?
 
-if [ vulkan_failed ]; then
-  echo "Vulkan passed" || echo "Vulkan failed"
+if [[ $vulkan_failed -eq 0 ]]; then
+  echo "Vulkan passed" 
+else 
+  echo "Vulkan failed"
 fi
 
 exit $glx_failed || $vulkan_failed
