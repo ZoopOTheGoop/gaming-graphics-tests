@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 # vulkaninfo --json always saves a file so we have to do this sadly...
 mkdir -p $SNAP_USER_COMMON
 vulkaninfo --json -o $SNAP_USER_COMMON/vkinfodump.json
