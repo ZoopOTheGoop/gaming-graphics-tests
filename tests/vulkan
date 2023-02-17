@@ -1,4 +1,9 @@
 #!/bin/bash
 
-vulkaninfo --json 2>/dev/null | jq .VkPhysicalDeviceProperties 2>&1> /dev/null
-exit $?
+# vulkaninfo --json always saves a file so we have to do this sadly...
+vulkaninfo --json -o $SNAP_USER_COMMON/vkinfodump.json 
+cat $SNAP_USER_COMMON/vkinfodump.json | jq .VkPhysicalDeviceProperties 2>&1> /dev/null
+result=$?
+rm $SNAP_USER_COMMON/vkinfodump.json
+
+exit $result
